@@ -51,17 +51,19 @@ class temp(object):
 
 async def is_subscribed(bot, query=None, userid=None):
     try:
-        if userid == None and query != None:
-            user = await bot.get_chat_member(AUTH_CHANNEL, query.from_user.id)
-        else:
-            user = await bot.get_chat_member(AUTH_CHANNEL, int(userid))
+        user_id = query.from_user.id if query else int(userid)
+        user = await bot.get_chat_member(AUTH_CHANNEL, user_id)
+        if user.status != ChatMemberStatus.BANNED:
+            return True
+        join_requests = await bot.get_chat_join_requests(AUTH_CHANNEL)
+        for request in join_requests:
+            if request.user.id == user_id:
+                return True
+        
     except UserNotParticipant:
         pass
     except Exception as e:
         logger.exception(e)
-    else:
-        if user.status != enums.ChatMemberStatus.BANNED:
-            return True
 
     return False
     
